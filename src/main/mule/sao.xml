@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd 
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b3d8e201-7a98-4993-8c7e-95b171e991d8" basePath="" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="9eada9f2-5bb2-40c5-9191-f6e3c37bd8d2" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="oracle" database="SOA" />
+	</db:config>
+	
+	
+	<flow name="insertDemandeMission" doc:id="6eba1861-c109-44d4-882c-d635d2249daa">
+	    <http:listener doc:name="Listener" doc:id="6d233429-0016-4079-bf0d-cc1ec66c53b7" config-ref="HTTP_Listener_config" path="/mission" allowedMethods="POST"/>
+	    
+	   
+	    <set-variable variableName="payload" value="#[payload]" doc:name="Set Payload" doc:id="9df3027f-7089-4555-b12a-2f0efa100521" />
+	
+	    <db:insert doc:name="Insert" doc:id="a814272f-f35d-4f25-bddc-7ac4c753fffe" config-ref="Database_Config">
+	        <db:sql><![CDATA[INSERT INTO mission (name, destination, startDate, endDate, state, typeTransport, idProf)
+	            VALUES (:name, :destination, :startDate, :endDate, :state, :typeTransport, :idProf);
+	        ]]></db:sql>
+	        
+	        <db:input-parameters><![CDATA[#[{
+	            "name": vars.payload.name,
+	            "destination": vars.payload.destination,
+	            "startDate": vars.payload.startDate,
+	            "endDate": vars.payload.endDate,
+	            "state": vars.payload.state,
+	            "typeTransport": vars.payload.typeTransport,
+	            "idProf": vars.payload.idProf
+	        }]]]></db:input-parameters>
+	    </db:insert>
+	    
+	    <set-payload value='#[{
+	        "status": "success",
+	        "message": "La mission a été insérée avec succès."
+	    }]' doc:name="Set Payload" doc:id="9927b94a-49d2-47a2-a6f1-8a0fbcfbb576" />
+	    
+	    <logger level="INFO" doc:name="Logger" doc:id="3a7a5c5d-082d-4b16-8d77-0bf3a6db8e18" message="Received insertMission request"/>
+	</flow>
+
+	
+	
+	
+	<flow name="InsertDemandeRemboursement" doc:id="769f72a3-1b94-4cf9-a69a-6d5591253298">
+	    <http:listener doc:name="Listener" doc:id="76c6a207-861a-4838-9f58-544caf3e2f39" config-ref="HTTP_Listener_config" path="/remboursement/mission/{id}" allowedMethods="POST"/>
+	    
+	    <set-variable variableName="payload" value="#[payload]" doc:name="Set Payload" doc:id="d89dc4bc-7561-44b2-9598-e088b2682d96" />
+	
+	    <db:insert doc:name="Insert" doc:id="1ec5a303-74cd-4d32-ad76-be1c749947f3" config-ref="Database_Config">
+	        <db:sql><![CDATA[INSERT INTO remboursement (idMission, state, idProf, budgetInitial)
+	            VALUES (:idMission, 'pending', :idProf, :budgetInitial);]]></db:sql>
+	      
+	        <db:input-parameters><![CDATA[#[{
+	            "idMission": attributes.uriParams.id as Number,
+	            "idProf": vars.payload.idProf,
+	            "budgetInitial": vars.payload.budgetInitial
+	        }]]]></db:input-parameters>
+	    </db:insert>
+	    
+	    <set-payload value='#[{
+	        "status": "success",
+	        "message": "Le remboursement a été inséré avec succès."
+	    }]' doc:name="Set Payload"/>
+	    
+	    <logger level="INFO" doc:name="Logger" doc:id="1f247be4-fad7-4ec2-a0ba-91cd16e74ca4" message="Received insertRemboursement request"/>
+	</flow>
+
+
+
+	
+	
+	
+	<flow name="GetAllMission">
+
+        <http:listener config-ref="HTTP_Listener_config" path="/mission" allowedMethods="GET" doc:name="HTTP"/>
+
+        <db:select config-ref="Database_Config" doc:name="Database">
+
+            <db:sql><![CDATA[SELECT * FROM mission]]>
+
+            </db:sql>
+
+        </db:select>
+
+		<ee:transform doc:name="Transform Message" doc:id="d0e18444-067c-4007-a5e0-854ba38bb694" >
+
+			<ee:message >
+
+				<ee:set-payload ><![CDATA[%dw 2.0
+
+		output application/java
+		
+		---
+		
+		
+		
+		[
+		
+			payload map ((item) -> write(item, "application/json")) joinBy ","	
+		
+		]]]></ee:set-payload>
+
+			</ee:message>
+
+		</ee:transform>
+	</flow>
+	
+	
+	
+	<flow name="GetAllRemboursement" doc:id="b655ad06-7952-4f21-bf99-c0df10650cf4" >
+		<http:listener config-ref="HTTP_Listener_config" path="/remboursement" allowedMethods="GET" doc:name="HTTP"/>
+
+        <db:select config-ref="Database_Config" doc:name="Database">
+
+            <db:sql><![CDATA[SELECT * FROM remboursement]]>
+
+            </db:sql>
+
+        </db:select>
+
+		<ee:transform doc:name="Transform Message" doc:id="c2425d9c-666e-43df-8d0f-3a45393fe138" >
+
+			<ee:message >
+
+				<ee:set-payload ><![CDATA[%dw 2.0
+
+		output application/java
+		
+		---
+		
+		
+		
+		[
+		
+			payload map ((item) -> write(item, "application/json")) joinBy ","	
+		
+		]]]></ee:set-payload>
+
+			</ee:message>
+
+		</ee:transform>	
+	</flow>
+	
+	
+	
+	<flow name="UpdateMissionByProf">
+	    <http:listener config-ref="HTTP_Listener_config" path="/mission/{id}" allowedMethods="PATCH" doc:name="HTTP"/>
+	    
+	    <set-variable variableName="idMission" value="#[attributes.uriParams.id]" doc:name="Set idMission"/>
+	    
+	    <logger message="Received HTTP request for mission id #[vars.idMission]" level="INFO" doc:name="Logger"/>
+	    
+	    <db:update config-ref="Database_Config" doc:name="Database">
+	        <db:sql><![CDATA[UPDATE mission
+	            SET
+	                name = :name,
+	                destination = :destination,
+	                startDate = :startDate,
+	                endDate = :endDate
+	            WHERE
+	                idMission = :idMission
+	        ]]></db:sql>
+	        <db:input-parameters><![CDATA[#[{
+	                "name": payload.name,
+	                "destination": payload.destination,
+	                "startDate": payload.startDate,
+	                "endDate": payload.endDate,
+	                "idMission": vars.idMission
+	        }]]]></db:input-parameters>
+	    </db:update>
+	
+	    <logger message="Update query executed successfully" level="INFO" doc:name="Logger"/>
+	</flow>
+	
+	<flow name="ValidateMission">
+	    <http:listener config-ref="HTTP_Listener_config" path="/mission/{id}/validate" allowedMethods="PATCH" doc:name="HTTP"/>
+	    
+	    <set-variable variableName="idMission" value="#[attributes.uriParams.id]" doc:name="Set idMission"/>
+	    
+	    <logger message="Received HTTP request for mission id #[vars.idMission]" level="INFO" doc:name="Logger"/>
+	    
+	    <db:update config-ref="Database_Config" doc:name="Database">
+	        <db:sql><![CDATA[UPDATE mission
+	            SET
+	                state = :state
+	            WHERE
+	                idMission = :idMission
+	        ]]></db:sql>
+	        <db:input-parameters><![CDATA[#[{
+	        		"state": payload.state,
+	                "idMission": vars.idMission
+	        }]]]></db:input-parameters>
+	    </db:update>
+	
+	    <logger message="Update query executed successfully" level="INFO" doc:name="Logger"/>
+	</flow>
+	
+	<flow name="DeleteMissionByProf">
+	    <http:listener config-ref="HTTP_Listener_config" path="/mission/{id}" allowedMethods="DELETE" doc:name="HTTP"/>
+	    
+	    <set-variable variableName="idMission" value="#[attributes.uriParams.id]" doc:name="Set idMission"/>
+	    
+	    <logger message="Received HTTP DELETE request for mission id #[vars.idMission]" level="INFO" doc:name="Logger"/>
+	    
+	    <db:delete config-ref="Database_Config" doc:name="Database">
+	        <db:sql><![CDATA[DELETE FROM mission WHERE idMission = :idMission]]></db:sql>
+	        <db:input-parameters><![CDATA[#[{"idMission": vars.idMission}]]]></db:input-parameters>
+	    </db:delete>
+	
+	    <logger message="Delete query executed successfully" level="INFO" doc:name="Logger"/>
+	</flow>
+	
+	
+	
+	
+	<flow name="chargerMontantTauxEtValiderRemboursement">
+	    <http:listener config-ref="HTTP_Listener_config" path="/remboursement/{id}/validate" allowedMethods="PATCH" doc:name="HTTP"/>
+	
+	    <set-variable variableName="idMission" value="#[attributes.uriParams.id]" doc:name="Set idMission"/>
+	
+	    <logger message="Received HTTP request for mission id #[vars.idMission]" level="INFO" doc:name="Logger"/>
+	
+	    <db:update config-ref="Database_Config" doc:name="Database">
+	        <db:sql><![CDATA[UPDATE remboursement
+	            SET
+	                state = :state
+	            WHERE
+	                idMission = :idMission
+	        ]]></db:sql>
+	        <db:input-parameters><![CDATA[#[{
+	                "state": payload.state,
+	                "idMission": vars.idMission
+	        }]]]></db:input-parameters>
+	    </db:update>
+	   
+	    <db:update config-ref="Database_Config" doc:name="Database">
+		    <db:sql><![CDATA[
+		        UPDATE remboursement
+		        SET frais = 0.75 * budgetInitial
+		        WHERE idMission = :idMission AND state = "validate"
+		    ]]></db:sql>
+		    <db:input-parameters><![CDATA[#[{
+		        "idMission": vars.idMission,
+		        "budgetInitial": vars.payload.budgetInitial
+		    }]]]></db:input-parameters>
+		</db:update>
+	
+	    <logger message="Update query executed successfully" level="INFO" doc:name="Logger"/>
+	</flow>
+	
+	
+	
+	
+	<flow name="AuthenticationFlow">
+	    <http:listener config-ref="HTTP_Listener_config" path="/user" allowedMethods="POST" doc:name="HTTP"/>
+	
+	    <logger level="INFO" doc:name="Logger" message="Received Payload: #[payload]" />
+	
+	    <db:select config-ref="Database_Config" doc:name="Database">
+	        <db:sql>
+	            <![CDATA[SELECT * FROM users WHERE username = :username AND pwd = :pwd]]>
+	        </db:sql>
+	        <db:input-parameters>
+	            <![CDATA[#[{
+	                "username": payload.username,
+	                "pwd": payload.pwd 
+	            }]]]>
+	        </db:input-parameters>
+	    </db:select>
+	
+	    <logger level="INFO" doc:name="Logger" message='SQL Query: #[output application/java --- write(payload, "application/json")]' />
+	
+	    <choice>
+	        <when expression="#[payload != null and sizeOf(payload) > 0]">
+	            <logger level="INFO" doc:name="Logger" message="Authenticated User ID: #[payload[0].id]" />
+	
+	            <set-variable variableName="authenticatedUserId" value="#[payload[0].id]" />
+	
+				<set-variable variableName="authenticatedUserRole" value="#[payload[0].role]" />
+
+   				<set-payload value="#[output application/json --- { 'message': 'Authentication successful. User ID: ' ++ payload[0].id ++ ', Role: ' ++ payload[0].role }]" doc:name="Set Payload"/>
+	            </when>
+	        <otherwise>
+	            <logger level="INFO" doc:name="Logger" message="Authentication Failed." />
+		
+		        <set-payload value="#[output application/json --- { 'message': 'Authentication failed' }]" doc:name="Set Payload"/>
+		    </otherwise>
+	    </choice>
+	</flow>
+	<flow name="GetAllHisRemboursement">
+	    <http:listener config-ref="HTTP_Listener_config" path="/remboursement" allowedMethods="GET" doc:name="HTTP"/>
+	
+	    <flow-ref name="AuthenticationFlow" doc:name="AuthenticationFlow"/>
+	
+	    <set-variable variableName="idProf" value="#[vars['authenticatedUserId']]" doc:name="Set ID Prof"/>
+	
+	    <logger level="INFO" doc:name="Logger" message="ID Prof obtained: #[vars.idProf]" />
+	
+	    <db:select config-ref="Database_Config" doc:name="Database">
+	        <db:sql>
+	            <![CDATA[SELECT * FROM remboursement WHERE idProf = :idProf]]>
+	        </db:sql>
+	        <db:input-parameters>
+	            <![CDATA[#[{
+	                "idProf": vars.idProf
+	            }]]]>
+	        </db:input-parameters>
+	    </db:select>
+	
+	    <logger level="INFO" doc:name="Logger" message='SQL Query Result: #[output application/java --- write(payload, "application/json")]' />
+	
+	    <ee:transform doc:name="Transform Message">
+	        <ee:message>
+	            <ee:set-payload>
+	                <![CDATA[%dw 2.0
+	                output application/java
+	                ---
+	                (if (payload != null) payload map ((item) -> write(item, "application/json")) else [])]]>
+	            </ee:set-payload>
+	        </ee:message>
+	    </ee:transform>
+	</flow>
+	<flow name="GetAllHisMission">
+	    <http:listener config-ref="HTTP_Listener_config" path="/mission" allowedMethods="GET" doc:name="HTTP"/>
+	
+	    <flow-ref name="AuthenticationFlow" doc:name="AuthenticationFlow"/>
+	
+	    <set-variable variableName="idProf" value="#[vars['authenticatedUserId']]" doc:name="Set ID Prof"/>
+	
+	    <logger level="INFO" doc:name="Logger" message="ID Prof obtained: #[vars.idProf]" />
+	
+	    <db:select config-ref="Database_Config" doc:name="Database">
+	        <db:sql>
+	            <![CDATA[SELECT * FROM mission WHERE idProf = :idProf]]>
+	        </db:sql>
+	        <db:input-parameters>
+	            <![CDATA[#[{
+	                "idProf": vars.idProf
+	            }]]]>
+	        </db:input-parameters>
+	    </db:select>
+	
+	    <logger level="INFO" doc:name="Logger" message='SQL Query Result: #[output application/java --- write(payload, "application/json")]' />
+	
+	    <ee:transform doc:name="Transform Message">
+	        <ee:message>
+	            <ee:set-payload>
+	                <![CDATA[%dw 2.0
+	                output application/java
+	                ---
+	                (if (payload != null) payload map ((item) -> write(item, "application/json")) else [])]]>
+	            </ee:set-payload>
+	        </ee:message>
+	    </ee:transform>
+	</flow>
+	
+
+</mule>
