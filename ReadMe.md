@@ -22,7 +22,7 @@ Les avantages offerts par ce système sont nombreux, parmi lesquels on peut cite
 ## Macro-processus de la gestion des missions et de remboursements : 
 
 <p align="center" >
-<img src= "ressource/macro_process.png" height="180" width="auto" />
+<img src= "ressource/macro_process.png" height="250" width="auto" />
 </p>
 
 ## Acteurs du système :
@@ -36,7 +36,7 @@ Les avantages offerts par ce système sont nombreux, parmi lesquels on peut cite
 ## Modélisation des processus : 
 
 <p align="center" >
-<img src= "ressource/mission.png" height="180" width="auto" />
+<img src= "ressource/mission.png" height="auto" width="800" />
 </p>
 Modélisation du processus de création d’une demande de mission
 <p align="center" >
