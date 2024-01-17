@@ -22,7 +22,7 @@ Les avantages offerts par ce système sont nombreux, parmi lesquels on peut cite
 ## Macro-processus de la gestion des missions et de remboursements : 
 
 <p align="center" >
-<img src= "Resource/macro_process.png" height="180" width="auto" />
+<img src= "ressource/macro_process.png" height="180" width="auto" />
 </p>
 
 ## Acteurs du système :
@@ -36,11 +36,11 @@ Les avantages offerts par ce système sont nombreux, parmi lesquels on peut cite
 ## Modélisation des processus : 
 
 <p align="center" >
-<img src= "Resource/mission.png" height="180" width="auto" />
+<img src= "ressource/mission.png" height="180" width="auto" />
 </p>
 Modélisation du processus de création d’une demande de mission
 <p align="center" >
-<img src= "Resource/remboursement.png" height="180" width="auto" />
+<img src= "ressource/remboursement.png" height="180" width="auto" />
 </p>
 Modélisation du processus de demande d’un remboursement
 
@@ -49,3 +49,5 @@ En optant pour une Architecture Orientée Services (SOA), nous procédons à la 
 
 ## Solution d'Intégration :
 Après la conception de l'application et de sa logique, notre objectif est maintenant de concevoir et de mettre en œuvre une solution d'intégration au sein du bus de services d'entreprise (ESB) fourni par MuleSoft. Cette solution va connecter différents services impliqués dans les processus décrits précédemment. L'intégration englobera le partage de données, la communication basée sur des événements et l'établissement de protocoles standardisés afin de garantir un système cohérent et interopérable.
+
+[Front-end GitHub Link]([URL](https://github.com/IrisTheSnail/soa-frontend)https://github.com/IrisTheSnail/soa-frontend)
