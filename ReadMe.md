@@ -50,4 +50,5 @@ En optant pour une Architecture Orientée Services (SOA), nous procédons à la 
 ## Solution d'Intégration :
 Après la conception de l'application et de sa logique, notre objectif est maintenant de concevoir et de mettre en œuvre une solution d'intégration au sein du bus de services d'entreprise (ESB) fourni par MuleSoft. Cette solution va connecter différents services impliqués dans les processus décrits précédemment. L'intégration englobera le partage de données, la communication basée sur des événements et l'établissement de protocoles standardisés afin de garantir un système cohérent et interopérable.
 
-[Front-end GitHub Link]([URL](https://github.com/IrisTheSnail/soa-frontend)https://github.com/IrisTheSnail/soa-frontend)
+[Front-end GitHub Link](https://github.com/IrisTheSnail/soa-frontend)
+
